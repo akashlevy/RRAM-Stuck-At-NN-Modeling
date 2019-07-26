@@ -4,10 +4,11 @@ Gets to 99.25% test accuracy after 12 epochs
 16 seconds per epoch on a GRID K520 GPU.
 '''
 
+from __future__ import print_function
+
 import os
 os.environ["TF_XLA_FLAGS"]="--tf_xla_cpu_global_jit"
 
-from __future__ import print_function
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
