@@ -35,8 +35,9 @@ ResNet1001 v2|111|     - %|            95.08+-.14 %|  -
 
 from __future__ import print_function
 
-import os
-os.environ["TF_XLA_FLAGS"]="--tf_xla_cpu_global_jit"
+import tensorflow as tf
+with tf.Session() as sess:
+    devices = sess.list_devices()
 
 import keras
 from keras.layers import Dense, Conv2D, BatchNormalization, Activation
@@ -374,8 +375,8 @@ print(model_type)
 
 # Prepare model model saving directory.
 save_dir = os.path.join(os.getcwd(), 'models')
-model_name = 'cifar_%s_%s_model.{epoch:03d}.h5' % (model_type, dataset)
-model_path = 'models/cifar_%s.%s.h5' % (model_type, dataset)
+model_name = 'cifar_%s_%s_model.{epoch:03d}.h5' % (model_type, dataset.__name__)
+model_path = 'models/cifar_%s.%s.h5' % (model_type, dataset.__name__)
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
 filepath = os.path.join(save_dir, model_name)
