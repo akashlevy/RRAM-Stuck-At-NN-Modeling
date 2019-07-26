@@ -434,7 +434,7 @@ def training(level_num, description):
 
 
 if __name__ == "__main__":
-  sample = [2, 3, 4, 5, 8, 16, 24, 32]
+  sample = [4]
   for i in sample:
     description = "mnist_" + str(i) + "levels_"
     training(i,description)
