@@ -476,7 +476,7 @@ print('Test accuracy:', scores[1])
 LEVELS = 4
 
 def quantize(weights, levels):
-    mean, stdev = np.mean(weights), np.stdev(weights)
+    mean, stdev = np.mean(weights), np.std(weights)
     min_range = mean - stdev * 1.5
     max_range = mean + stdev * 1.5
     range_size = max_range - min_range
