@@ -24,7 +24,7 @@ np.random.seed(42)
 dataset = cifar100
 
 batch_size = 32
-nb_classes = 10
+nb_classes = 100
 nb_epoch = 200
 data_augmentation = False
 
