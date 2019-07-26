@@ -49,19 +49,19 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 from keras import backend as K
 from keras.models import Model
-from keras.datasets import cifar10
+from keras.datasets import cifar10, cifar100
 import numpy as np
 import os
 
 np.random.seed(42)
 
-dataset = cifar10
+dataset = cifar100
 
 # Training parameters
 batch_size = 32  # orig paper trained all networks with batch_size=128
 epochs = 200
 data_augmentation = False
-num_classes = 10
+num_classes = 100
 
 # Subtracting pixel mean improves accuracy
 subtract_pixel_mean = True
@@ -363,9 +363,9 @@ def resnet_v2(input_shape, depth, num_classes=10):
 
 
 if version == 2:
-    model = resnet_v2(input_shape=input_shape, depth=depth)
+    model = resnet_v2(input_shape=input_shape, depth=depth, num_classes=num_classes)
 else:
-    model = resnet_v1(input_shape=input_shape, depth=depth)
+    model = resnet_v1(input_shape=input_shape, depth=depth, num_classes=num_classes)
 
 model.compile(loss='categorical_crossentropy',
               optimizer=Adam(lr=lr_schedule(0)),
