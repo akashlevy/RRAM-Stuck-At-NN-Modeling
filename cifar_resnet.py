@@ -498,7 +498,7 @@ print('Quantized test accuracy:', score[1])
 BER = 0.0156
 
 random_weights = [np.random.choice(np.linspace(min_range, max_range, LEVELS), weights.shape) for min_range, max_range, weights in zip(min_ranges, max_ranges, quantized_weights)]
-ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), random_weights, weights) for weights in quantized_weights]
+ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), random_weight, weights) for random_weight, weights in zip(random_weights, quantized_weights)]
 model.set_weights(ber_weights)
 score = model.evaluate(x_test, y_test, verbose=1)
 print('Naive BER test loss:', score[0])
