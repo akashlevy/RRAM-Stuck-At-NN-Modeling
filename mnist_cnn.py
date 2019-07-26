@@ -16,10 +16,15 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(42)
 
 batch_size = 128
 num_classes = 10
 epochs = 12
+
+mode = 'load'
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -72,23 +77,56 @@ if mode == 'train':
             validation_data=(x_test, y_test))
     model.save_weights('mnist_cnn.h5')
 elif mode == 'load':
-    mode.load_weights('mnist_cnn.h5')
+    model.load_weights('mnist_cnn.h5')
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 
 # QUANTIZATION ADDON
+
+#LEVELS = 3
+#MIN = -0.1
+#MAX = 0.1
+
 LEVELS = 4
-MIN = -1e-1
-MAX = 1e-1
+MIN = -0.3
+MAX = 0.3
 
 def quantize(weights, levels, min_range, max_range):
     range_size = max_range - min_range
-    qweights = np.round((weights + min_range) / range_size)
+    qweights = np.round((weights - min_range) * (levels-1) / range_size) * range_size / (levels-1) + min_range
+    #print('Weights', weights)
+    #print('QWeights', qweights)
     return np.clip(qweights, min_range, max_range)
 
 model_weights = model.get_weights()
-model.set_weights(quantize(model_weights, LEVELS, MIN, MAX))
+#plt.hist(np.concatenate([weights.flatten() for weights in model_weights]),bins=16,range=(-0.5,0.5), log=True)
+#plt.show()
+quantized_weights = [quantize(weights, LEVELS, MIN, MAX) for weights in model_weights]
+model.set_weights(quantized_weights)
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Quantized test loss:', score[0])
 print('Quantized test accuracy:', score[1])
+
+# QUANTIZED NAIVE BER MODELING
+BER = 0.0156
+
+ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), np.random.choice(np.linspace(MIN, MAX, LEVELS)), weights) for weights in quantized_weights]
+model.set_weights(ber_weights)
+score = model.evaluate(x_test, y_test, verbose=0)
+print('Naive BER test loss:', score[0])
+print('Naive BER test accuracy:', score[1])
+
+# EXACT MODELING
+LOWER_BOUND_PROBS = np.array([250., 4., 2., 5.])
+LOWER_BOUND_PROBS /= LOWER_BOUND_PROBS.sum()
+UPPER_BOUND_PROBS = np.array([3., 1., 1., 254.])
+UPPER_BOUND_PROBS /= UPPER_BOUND_PROBS.sum()
+
+lower_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=LOWER_BOUND_PROBS) for weights in quantized_weights]
+upper_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights in quantized_weights]
+exact_weights = [np.clip(weights, lower_bound, upper_bound) for weights, lower_bound, upper_bound in zip(quantized_weights, lower_bounds, upper_bounds)]
+model.set_weights(ber_weights)
+score = model.evaluate(x_test, y_test, verbose=0)
+print('Exact modeling test loss:', score[0])
+print('Exact modeling test accuracy:', score[1])
