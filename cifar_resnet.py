@@ -488,7 +488,7 @@ def quantize(weights, levels):
 model_weights = model.get_weights()
 #plt.hist(np.concatenate([weights.flatten() for weights in model_weights]),bins=16,range=(-0.5,0.5), log=True)
 #plt.show()
-quantized_weights, min_ranges, max_ranges = unzip([quantize(weights, LEVELS) for weights in model_weights])
+quantized_weights, min_ranges, max_ranges = zip(*[quantize(weights, LEVELS) for weights in model_weights])
 model.set_weights(quantized_weights)
 score = model.evaluate(x_test, y_test, verbose=1)
 print('Quantized test loss:', score[0])
