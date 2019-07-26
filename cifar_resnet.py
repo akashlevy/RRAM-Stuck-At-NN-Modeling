@@ -531,3 +531,8 @@ model.set_weights(exact_weights)
 score = model.evaluate(x_test, y_test, verbose=1)
 print('Exact modeling test loss:', score[0])
 print('Exact modeling test accuracy:', score[1])
+
+model.set_weights(model_weights)
+scores = model.evaluate(x_test, y_test, verbose=1)
+print('Test loss:', scores[0])
+print('Test accuracy:', scores[1])
