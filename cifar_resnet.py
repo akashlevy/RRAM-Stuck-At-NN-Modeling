@@ -59,7 +59,7 @@ dataset = cifar10
 # Training parameters
 batch_size = 32  # orig paper trained all networks with batch_size=128
 epochs = 200
-data_augmentation = True
+data_augmentation = False
 num_classes = 10
 
 # Subtracting pixel mean improves accuracy
@@ -459,6 +459,7 @@ if not os.path.exists(model_path):
                             validation_data=(x_test, y_test),
                             epochs=epochs, verbose=1, workers=4,
                             callbacks=callbacks)
+
     model.save_weights(model_path)
 else:
     model.load_weights(model_path)
