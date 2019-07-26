@@ -481,9 +481,8 @@ def quantize(weights, levels):
     max_range = mean + stdev * 1.5
     range_size = max_range - min_range
     qweights = np.round((weights - min_range) * (levels-1) / range_size) * range_size / (levels-1) + min_range
-    if len(weights) < 10:
-        print('Weights', weights)
-        print('QWeights', qweights)
+    print('Weights', weights)
+    print('QWeights', np.clip(qweights, min_range, max_range))
     return np.clip(qweights, min_range, max_range), min_range, max_range
 
 model_weights = model.get_weights()
