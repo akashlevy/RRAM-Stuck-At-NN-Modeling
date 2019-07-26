@@ -34,7 +34,7 @@ img_rows, img_cols = 32, 32
 img_channels = 3
 
 # the data, shuffled and split between train and test sets
-(X_train, y_train), (X_test, y_test) = dataset.load_data()
+(X_train, y_train), (X_test, Y_test) = dataset.load_data()
 print('X_train shape:', X_train.shape)
 print(X_train.shape[0], 'train samples')
 print(X_test.shape[0], 'test samples')
@@ -45,7 +45,7 @@ X_test /= 255
 
 # convert class vectors to binary class matrices
 Y_train = np_utils.to_categorical(y_train, nb_classes)
-Y_test = np_utils.to_categorical(y_test, nb_classes)
+Y_test = np_utils.to_categorical(Y_test, nb_classes)
 
 model = Sequential()
 
@@ -123,7 +123,7 @@ else:
     model.load_weights(model_path)
 
 # Score trained model.
-scores = model.evaluate(x_test, y_test, verbose=1)
+scores = model.evaluate(X_test, Y_test, verbose=1)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
 
@@ -149,7 +149,7 @@ model_weights = model.get_weights()
 #plt.show()
 quantized_weights = [quantize(weights, LEVELS, MIN, MAX) for weights in model_weights]
 model.set_weights(quantized_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=0)
 print('Quantized test loss:', score[0])
 print('Quantized test accuracy:', score[1])
 
@@ -158,7 +158,7 @@ BER = 0.0156
 
 ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), np.random.choice(np.linspace(MIN, MAX, LEVELS)), weights) for weights in quantized_weights]
 model.set_weights(ber_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=0)
 print('Naive BER test loss:', score[0])
 print('Naive BER test accuracy:', score[1])
 
@@ -183,6 +183,6 @@ lower_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.sha
 upper_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights in quantized_weights]
 exact_weights = [np.clip(weights, lower_bound, upper_bound) for weights, lower_bound, upper_bound in zip(quantized_weights, lower_bounds, upper_bounds)]
 model.set_weights(exact_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=0)
 print('Exact modeling test loss:', score[0])
 print('Exact modeling test accuracy:', score[1])
