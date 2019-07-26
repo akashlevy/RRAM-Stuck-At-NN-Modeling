@@ -51,17 +51,18 @@ from keras import backend as K
 from keras.models import Model
 from keras.datasets import cifar10, cifar100
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 
 np.random.seed(42)
 
-dataset = cifar100
+dataset = cifar10
 
 # Training parameters
 batch_size = 32  # orig paper trained all networks with batch_size=128
 epochs = 200
 data_augmentation = False
-num_classes = 100
+num_classes = 10
 
 # Subtracting pixel mean improves accuracy
 subtract_pixel_mean = True
@@ -377,6 +378,7 @@ print(model_type)
 save_dir = os.path.join(os.getcwd(), 'models')
 model_name = 'cifar_%s_%s_model.{epoch:03d}.h5' % (model_type, dataset.__name__)
 model_path = 'models/cifar_%s.%s.h5' % (model_type, dataset.__name__)
+print(model_path)
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
 filepath = os.path.join(save_dir, model_name)
@@ -483,8 +485,8 @@ MAX = 0.3
 def quantize(weights, levels, min_range, max_range):
     range_size = max_range - min_range
     qweights = np.round((weights - min_range) * (levels-1) / range_size) * range_size / (levels-1) + min_range
-    #print('Weights', weights)
-    #print('QWeights', qweights)
+    print('Weights', weights)
+    print('QWeights', qweights)
     return np.clip(qweights, min_range, max_range)
 
 model_weights = model.get_weights()
@@ -492,7 +494,7 @@ model_weights = model.get_weights()
 #plt.show()
 quantized_weights = [quantize(weights, LEVELS, MIN, MAX) for weights in model_weights]
 model.set_weights(quantized_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(x_test, y_test, verbose=1)
 print('Quantized test loss:', score[0])
 print('Quantized test accuracy:', score[1])
 
@@ -501,7 +503,7 @@ BER = 0.0156
 
 ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), np.random.choice(np.linspace(MIN, MAX, LEVELS)), weights) for weights in quantized_weights]
 model.set_weights(ber_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(x_test, y_test, verbose=1)
 print('Naive BER test loss:', score[0])
 print('Naive BER test accuracy:', score[1])
 
@@ -526,6 +528,6 @@ lower_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.sha
 upper_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights in quantized_weights]
 exact_weights = [np.clip(weights, lower_bound, upper_bound) for weights, lower_bound, upper_bound in zip(quantized_weights, lower_bounds, upper_bounds)]
 model.set_weights(exact_weights)
-score = model.evaluate(x_test, y_test, verbose=0)
+score = model.evaluate(x_test, y_test, verbose=1)
 print('Exact modeling test loss:', score[0])
 print('Exact modeling test accuracy:', score[1])

@@ -105,3 +105,6 @@ venv.bak/
 
 # private keys
 *.pem
+
+# ignore intermediates
+models/intermediates/*
