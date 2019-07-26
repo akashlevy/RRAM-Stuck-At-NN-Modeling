@@ -10,7 +10,7 @@ import os
 os.environ["TF_XLA_FLAGS"]="--tf_xla_cpu_global_jit"
 
 import keras
-from keras.datasets import mnist
+from keras.datasets import mnist, fashion_mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
@@ -25,7 +25,7 @@ num_classes = 10
 epochs = 12
 
 mode = 'load'
-dataset = mnist
+dataset = fashion_mnist
 
 # input image dimensions
 img_rows, img_cols = 28, 28
