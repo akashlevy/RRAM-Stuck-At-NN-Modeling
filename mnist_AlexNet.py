@@ -313,8 +313,8 @@ def training(level_num, description):
       if not os.path.isdir(work_dir + folder):
         raise
 
-  train_data_path = [os.getenv("HOME")+"/mnist_data_TFRecord/"+'train'+str(i)+".tfrecord" for i in range(1,5)]
-  valid_data_path = [os.getenv("HOME")+"/mnist_data_TFRecord/"+"validation.tfrecord"]
+  train_data_path = ["mnist_data_TFRecord/train.tfrecords"]
+  valid_data_path = ["mnist_data_TFRecord/validation.tfrecords"]
 
   train = data_set()
   handle = tf.placeholder(dtype=tf.string)
