@@ -68,6 +68,7 @@ model.add(Dense(num_classes, activation='softmax'))
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
+model.summary()
 
 model_path = "models/mnist_cnn.%s.h5" % dataset.__name__
 if not os.path.exists(model_path):
