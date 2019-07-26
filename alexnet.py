@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 import numpy as np
+import os
 
 # (2) Initialize randomness
 np.random.seed(1000)
