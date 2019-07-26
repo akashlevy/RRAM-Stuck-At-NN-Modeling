@@ -75,6 +75,7 @@ model.add(Activation('softmax'))
 from weightnorm import SGDWithWeightnorm
 sgd_wn = SGDWithWeightnorm(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy',optimizer=sgd_wn,metrics=['accuracy'])
+model.summary()
 
 # data based initialization of parameters
 from weightnorm import data_based_init
