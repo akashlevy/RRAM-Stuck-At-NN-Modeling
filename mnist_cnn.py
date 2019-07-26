@@ -25,12 +25,13 @@ num_classes = 10
 epochs = 12
 
 mode = 'load'
+dataset = mnist
 
 # input image dimensions
 img_rows, img_cols = 28, 28
 
 # the data, split between train and test sets
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+(x_train, y_train), (x_test, y_test) = dataset.load_data()
 
 if K.image_data_format() == 'channels_first':
     x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
@@ -69,15 +70,16 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
 
-if mode == 'train':
+model_path = "models/mnist_cnn.%s.h5" % dataset.__name__
+if not os.path.exists(model_path):
     model.fit(x_train, y_train,
             batch_size=batch_size,
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test))
-    model.save_weights('mnist_cnn.h5')
-elif mode == 'load':
-    model.load_weights('mnist_cnn.h5')
+    model.save_weights(model_path)
+else:
+    model.load_weights(model_path)
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
