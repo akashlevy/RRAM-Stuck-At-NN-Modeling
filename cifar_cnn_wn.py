@@ -21,7 +21,7 @@ import os
 
 np.random.seed(42)
 
-dataset = cifar10
+dataset = cifar100
 
 batch_size = 32
 nb_classes = 10
