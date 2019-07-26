@@ -24,7 +24,6 @@ batch_size = 128
 num_classes = 10
 epochs = 12
 
-mode = 'load'
 dataset = fashion_mnist
 
 # input image dimensions
@@ -120,15 +119,26 @@ print('Naive BER test loss:', score[0])
 print('Naive BER test accuracy:', score[1])
 
 # EXACT MODELING
-LOWER_BOUND_PROBS = np.array([250., 4., 2., 5.])
+LOWER_BOUND_PROBS = np.array([253., 4., 2., 5.])
+MASKED = LOWER_BOUND_PROBS * np.array([1, 1, 0, 0])
+LOWER_BOUND_PROBS += 253 * MASKED / MASKED.sum()
+MASKED = LOWER_BOUND_PROBS * np.array([1, 1, 1, 0])
+LOWER_BOUND_PROBS += 253 * MASKED / MASKED.sum()
+#print(LOWER_BOUND_PROBS)
 LOWER_BOUND_PROBS /= LOWER_BOUND_PROBS.sum()
-UPPER_BOUND_PROBS = np.array([3., 1., 1., 254.])
+
+UPPER_BOUND_PROBS = np.array([3., 1., 1., 259.])
+MASKED = UPPER_BOUND_PROBS * np.array([0, 0, 1, 1])
+UPPER_BOUND_PROBS += 254 * MASKED / MASKED.sum()
+MASKED = UPPER_BOUND_PROBS * np.array([0, 1, 1, 1])
+UPPER_BOUND_PROBS += 256 * MASKED / MASKED.sum()
+#print(UPPER_BOUND_PROBS)
 UPPER_BOUND_PROBS /= UPPER_BOUND_PROBS.sum()
 
 lower_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=LOWER_BOUND_PROBS) for weights in quantized_weights]
 upper_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights in quantized_weights]
 exact_weights = [np.clip(weights, lower_bound, upper_bound) for weights, lower_bound, upper_bound in zip(quantized_weights, lower_bounds, upper_bounds)]
-model.set_weights(ber_weights)
+model.set_weights(exact_weights)
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Exact modeling test loss:', score[0])
 print('Exact modeling test accuracy:', score[1])
