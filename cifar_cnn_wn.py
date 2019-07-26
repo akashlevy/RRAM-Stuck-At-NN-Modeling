@@ -21,10 +21,10 @@ import os
 
 np.random.seed(42)
 
-dataset = cifar100
+dataset = cifar10
 
 batch_size = 32
-nb_classes = 100
+nb_classes = 10
 nb_epoch = 200
 data_augmentation = False
 
@@ -129,36 +129,35 @@ print('Test accuracy:', scores[1])
 
 # QUANTIZATION ADDON
 
-#LEVELS = 3
-#MIN = -0.1
-#MAX = 0.1
-
+# QUANTIZATION ADDON
 LEVELS = 4
-MIN = -0.3
-MAX = 0.3
 
-def quantize(weights, levels, min_range, max_range):
+def quantize(weights, levels):
+    mean, stdev = np.mean(weights), np.std(weights)
+    min_range = mean - stdev * 1.5
+    max_range = mean + stdev * 1.5
     range_size = max_range - min_range
     qweights = np.round((weights - min_range) * (levels-1) / range_size) * range_size / (levels-1) + min_range
-    #print('Weights', weights)
-    #print('QWeights', qweights)
-    return np.clip(qweights, min_range, max_range)
+    print('Weights', weights)
+    print('QWeights', np.clip(qweights, min_range, max_range))
+    return np.clip(qweights, min_range, max_range), min_range, max_range
 
 model_weights = model.get_weights()
 #plt.hist(np.concatenate([weights.flatten() for weights in model_weights]),bins=16,range=(-0.5,0.5), log=True)
 #plt.show()
-quantized_weights = [quantize(weights, LEVELS, MIN, MAX) for weights in model_weights]
+quantized_weights, min_ranges, max_ranges = zip(*[quantize(weights, LEVELS) for weights in model_weights])
 model.set_weights(quantized_weights)
-score = model.evaluate(X_test, Y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=1)
 print('Quantized test loss:', score[0])
 print('Quantized test accuracy:', score[1])
 
 # QUANTIZED NAIVE BER MODELING
 BER = 0.0156
 
-ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), np.random.choice(np.linspace(MIN, MAX, LEVELS)), weights) for weights in quantized_weights]
+random_weights = [np.random.choice(np.linspace(min_range, max_range, LEVELS), weights.shape) for min_range, max_range, weights in zip(min_ranges, max_ranges, quantized_weights)]
+ber_weights = [np.where(np.random.random(weights.shape) < BER * LEVELS/(LEVELS-1), random_weight, weights) for random_weight, weights in zip(random_weights, quantized_weights)]
 model.set_weights(ber_weights)
-score = model.evaluate(X_test, Y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=1)
 print('Naive BER test loss:', score[0])
 print('Naive BER test accuracy:', score[1])
 
@@ -179,10 +178,15 @@ UPPER_BOUND_PROBS += 256 * MASKED / MASKED.sum()
 #print(UPPER_BOUND_PROBS)
 UPPER_BOUND_PROBS /= UPPER_BOUND_PROBS.sum()
 
-lower_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=LOWER_BOUND_PROBS) for weights in quantized_weights]
-upper_bounds = [np.random.choice(np.linspace(MIN, MAX, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights in quantized_weights]
+lower_bounds = [np.random.choice(np.linspace(min_range, max_range, LEVELS), size=weights.shape, p=LOWER_BOUND_PROBS) for weights, min_range, max_range in zip(quantized_weights, min_ranges, max_ranges)]
+upper_bounds = [np.random.choice(np.linspace(min_range, max_range, LEVELS), size=weights.shape, p=UPPER_BOUND_PROBS) for weights, min_range, max_range in zip(quantized_weights, min_ranges, max_ranges)]
 exact_weights = [np.clip(weights, lower_bound, upper_bound) for weights, lower_bound, upper_bound in zip(quantized_weights, lower_bounds, upper_bounds)]
 model.set_weights(exact_weights)
-score = model.evaluate(X_test, Y_test, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=1)
 print('Exact modeling test loss:', score[0])
 print('Exact modeling test accuracy:', score[1])
+
+model.set_weights(model_weights)
+scores = model.evaluate(X_test, Y_test, verbose=1)
+print('Test loss:', scores[0])
+print('Test accuracy:', scores[1])
